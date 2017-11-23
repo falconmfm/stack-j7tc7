@@ -1,0 +1,73 @@
+---
+- name: download Oracle JDK7 to host
+  local_action: >
+    command wget -N -P "{{oracle_jdk_download_dir}}" --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/{{oracle_jdk_package_subdir}}/{{oracle_jdk_package}}
+  tags: download
+  become: no
+  when: oracle_jdk_download
+
+- name: "{{oracle_jdk_installation_dir}} must exist"
+  become: yes
+  file:
+    path="{{oracle_jdk_installation_dir}}"
+    state="directory"
+
+- name: unpacks Jdk7
+  become: yes
+  unarchive:
+    src="{{oracle_jdk_download_dir}}/{{oracle_jdk_package}}"
+    dest="{{oracle_jdk_installation_dir}}"
+    creates="{{oracle_jdk_installation_dir}}/jdk{{oracle_jdk_version}}/bin/java"
+    force=no
+  tags: unpack
+
+- name: crea el enlace
+  become: yes
+  file:
+    src="{{oracle_jdk_installation_dir}}/jdk{{oracle_jdk_version}}"
+    dest="{{oracle_jdk_installation_dir}}/java"
+    state=link
+  tags: link
+
+- name: Descomprime Java JCE package
+  strategy: debug
+  unarchive:
+    src="{{oracle_jdk_download_dir}}/{{oracle_jce_package}}"
+    dest="/tmp/"
+    creates="/tmp/UnlimitedJCEPolicy/"
+  when: oracle_jce
+  tags:
+    - jce
+
+
+- name: Instala las politica JCE.
+  become: yes
+  when: oracle_jce
+  changed_when: false
+  with_items:
+    - local_policy.jar
+    - US_export_policy.jar
+  command: install
+      --owner root
+      --group root
+      --mode 0644
+      /tmp/UnlimitedJCEPolicy/{{ item }}
+      {{ oracle_jce_installation_dir }}/{{ item }}
+  tags:
+    - jce
+
+- name: setup JAVA_HOME
+  lineinfile:
+    dest=~/.bashrc
+    line="export JAVA_HOME={{oracle_jdk_installation_dir}}/java"
+    state=present
+    insertafter=EOF
+    create=true
+
+- name: append JAVA_HOME to PATH
+  lineinfile:
+    dest=~/.bashrc
+    line="export PATH=$JAVA_HOME/bin:$PATH"
+    state=present
+    insertafter=EOF
+    create=true
