@@ -4,5 +4,4 @@
     - vars/main.yml
   roles:
     - { role: cfv.tomcat7 }
-    - { role: cfv.java }
 
