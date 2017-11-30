@@ -1,18 +1,40 @@
 ---
-- name: download Oracle JDK7 to host
-  local_action: >
-    command wget -N -P "{{oracle_jdk_download_dir}}" --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/{{oracle_jdk_package_subdir}}/{{oracle_jdk_package}}
-  tags: download
-  become: no
-  when: oracle_jdk_download
+#- name: Comprobamos si existe una version previamente descargada
+#  stat:
+#    path: "{{oracle_jdk_download_dir}}/{{oracle_jdk_package}}"
+#  register: version_descargada
+#- debug:
+#    msg: "{{oracle_jdk_download_dir}}/{{oracle_jdk_package}}"
+#  when: not version_descargada.stat.exists
 
-- name: "{{oracle_jdk_installation_dir}} must exist"
+- name: "{{oracle_jdk_installation_dir}} debe existir"
   become: yes
   file:
-    path="{{oracle_jdk_installation_dir}}"
+    path="{{ item }}"
     state="directory"
+  with_items: 
+    - "{{oracle_jdk_installation_dir}}"
+    - "/tmp/{{oracle_jdk_download_dir}}"
 
-- name: unpacks Jdk7
+#- name: "Descarga Oracle JDK {{ oracle_jdk_version }} desde la web "
+#  local_action: >
+#    command wget -N -P "{{oracle_jdk_download_dir}}" --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/{{oracle_jdk_package_subdir}}/{{oracle_jdk_package}}
+#  become: no
+#  when: oracle_jdk_download and not oracle_jdk_oficial
+#  tags: 
+#  - download
+#
+#- name: "Descarga Oracle JDK {{ oracle_jdk_version }} aprobado por CFV"
+#  get_url:
+#    url:     "http://repos.copv.junta-andalucia.es/repo/copv/deploy/{{ oracle_jdk_package }}"
+#    dest:    "{{oracle_jdk_download_dir}}"
+#  environment: "{{proxy_env}}"
+#  become: no
+#  when: oracle_jdk_oficial
+#  tags: 
+#  - download
+
+- name: "Descomprime jdk {{ oracle_jdk_version }}"
   become: yes
   unarchive:
     src="{{oracle_jdk_download_dir}}/{{oracle_jdk_package}}"
@@ -21,7 +43,7 @@
     force=no
   tags: unpack
 
-- name: crea el enlace
+- name: "Crea el enlace simbólico"
   become: yes
   file:
     src="{{oracle_jdk_installation_dir}}/jdk{{oracle_jdk_version}}"
@@ -56,7 +78,7 @@
   tags:
     - jce
 
-- name: setup JAVA_HOME
+- name: "Establece JAVA_HOME a {{oracle_jdk_installation_dir}}/java "
   lineinfile:
     dest=~/.bashrc
     line="export JAVA_HOME={{oracle_jdk_installation_dir}}/java"
@@ -64,10 +86,46 @@
     insertafter=EOF
     create=true
 
-- name: append JAVA_HOME to PATH
+- name: Añade JAVA_HOME a la variable de PATH
   lineinfile:
     dest=~/.bashrc
     line="export PATH=$JAVA_HOME/bin:$PATH"
     state=present
     insertafter=EOF
     create=true
+
+- name: Copia los certificados
+  become: on
+  copy:
+    src: "files/certs/{{ item.file }}"
+    dest: "/tmp/{{ oracle_jdk_download_dir }}/{{ item.file }}"
+    mode: u=rw,g=r,o=r
+  with_items: "{{ oracle_certs }}"
+  tags:
+    - certificados
+
+#- name: Añade certificados raiz y ca's
+#  become: on
+#  java_cert:
+##    cert_path: "/tmp/{{oracle_jdk_download_dir}}/{{ item.file }}"
+#    cert_path: "{{ lookup('file', 'files/certs/{{ item.file }}') }}"
+#    cert_alias: "{{ item.name }}"
+#    keystore_path: "{{ oracle_jdk_installation_dir }}/java/jre/lib/security/cacerts"
+#    keystore_pass: changeit
+#    state: present
+#  with_items: "{{ oracle_certs }}"
+#  tags:
+#    - certificados
+#
+#
+#- name: Añade los certificados siguientes a cacerts
+#  become: on
+#  java_cert:
+#    cert_url: "{{ item.url }}"
+#    cert_port: "{{ item.port }}"
+#    keystore_path: "{{ oracle_jdk_installation_dir }}/java/jre/lib/security/cacerts"
+#    keystore_pass: changeit
+#    state: present
+#  with_items: "{{ oracle_cacerts }}"
+#  tags:
+#    - certificados

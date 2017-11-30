@@ -2,7 +2,8 @@
 
 - hosts: all
   vars_files:
-    - vars/main.yml
+    - vars/main8.yml
+    - vars/cfv.yml
   roles:
     - { role: cfv.java }
 
