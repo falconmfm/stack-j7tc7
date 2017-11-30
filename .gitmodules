@@ -1,0 +1,6 @@
+[submodule "roles/cfv.java"]
+        path = roles/cfv.java
+        url = https://github.com/falconmfm/ansible-java.git
+[submodule "roles/cfv.tomcat7"]
+        path = roles/cfv.tomcat7
+        url = https://github.com/falconmfm/ansible-tomcat7.git

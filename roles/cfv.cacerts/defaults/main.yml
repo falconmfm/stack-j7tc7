@@ -1,0 +1,12 @@
+---
+# defaults file for oracle_jdk
+oracle_jdk_download_dir: '~/Downloads'
+oracle_jdk_package: 'jdk-7u60-linux-x64.tar.gz'
+oracle_jdk_package_subdir: '7u60-b19'
+oracle_jdk_version: '1.7.0_60'
+oracle_jdk_installation_dir: '/home/vagrant/jdk'
+oracle_jce_installation_dir: '{{ oracle_jdk_installation_dir }}/java/jre/lib/security'
+oracle_jce: true
+oracle_jdk_download: true
+oracle_jce_package: 'UnlimitedJCEPolicyJDK7.tgz'
+

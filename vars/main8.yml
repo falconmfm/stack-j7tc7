@@ -1,0 +1,44 @@
+---
+# defaults file for oracle_jdk
+oracle_jdk_oficial: true
+oracle_jdk_download_dir: 'files'
+oracle_jdk_package: 'jdk-8u151-linux-x64.tar.gz'
+oracle_jdk_package_subdir: '8u151-b12'
+oracle_jdk_version: '1.8.0_151'
+oracle_jdk_installation_dir: '/import/software'
+oracle_jce_installation_dir: '{{ oracle_jdk_installation_dir }}/java/jre/lib/security'
+oracle_jce: true
+oracle_jdk_download: false
+oracle_jce_package: 'UnlimitedJCEPolicyJDK8.tgz'
+
+java_home: '{{ oracle_jdk_installation_dir }}/java'
+entorno: 'PRE'
+software_base: '/import/software'
+version: '8.0.47'
+tomcat_archive: 'apache-tomcat-{{ version }}.tar.gz'
+ver: '80'
+sec: '01'
+instance: '{{ ver }}_{{ sec }}'
+tomcat_instance: 'tomcat{{ instance }}'
+tomcat_user: '{{ tomcat_instance}}'
+tomcat_group: 'www'
+app_base: '/import/datos/{{ tomcat_instance }}'
+catalina_base: '{{ software_base }}/apache-tomcat-{{ version }}'
+catalina_home: '{{ software_base }}/{{ tomcat_instance }}'
+http_port: '8080'
+shutdown_port: '8005'
+ajp_port: '8009'
+ajp_host: 'localhost'
+
+manager_password: 'manager'
+
+jmx_port: '9004'
+monitor_password: 'jmxmonitor'
+control_password: 'jmxcontrol'
+ip : '0.0.0.0'
+
+proxy_env:
+  http_proxy: "{{ lookup('env', 'http_proxy') }}"
+  https_proxy: "{{ lookup('env', 'http_proxy') }}"
+  no_proxy: "{{ lookup('env', 'no_proxy') }}"
+

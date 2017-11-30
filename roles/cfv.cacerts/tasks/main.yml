@@ -1,0 +1,92 @@
+---
+#- name: Comprobamos si existe una version previamente descargada
+#  stat:
+#    path: "{{oracle_jdk_download_dir}}/{{oracle_jdk_package}}"
+#  register: version_descargada
+#- debug:
+#    msg: "{{oracle_jdk_download_dir}}/{{oracle_jdk_package}}"
+#  when: not version_descargada.stat.exists
+
+- name: "{{oracle_jdk_installation_dir}} debe existir"
+  become: yes
+  file:
+    path="{{oracle_jdk_installation_dir}}"
+    state="directory"
+
+#- name: "Descarga Oracle JDK {{ oracle_jdk_version }} desde la web "
+#  local_action: >
+#    command wget -N -P "{{oracle_jdk_download_dir}}" --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/{{oracle_jdk_package_subdir}}/{{oracle_jdk_package}}
+#  become: no
+#  when: oracle_jdk_download and not oracle_jdk_oficial
+#  tags: 
+#  - download
+#
+#- name: "Descarga Oracle JDK {{ oracle_jdk_version }} aprobado por CFV"
+#  get_url:
+#    url:     "http://repos.copv.junta-andalucia.es/repo/copv/deploy/{{ oracle_jdk_package }}"
+#    dest:    "{{oracle_jdk_download_dir}}"
+#  environment: "{{proxy_env}}"
+#  become: no
+#  when: oracle_jdk_oficial
+#  tags: 
+#  - download
+
+- name: "Descomprime jdk {{ oracle_jdk_version }}"
+  become: yes
+  unarchive:
+    src="{{oracle_jdk_download_dir}}/{{oracle_jdk_package}}"
+    dest="{{oracle_jdk_installation_dir}}"
+    creates="{{oracle_jdk_installation_dir}}/jdk{{oracle_jdk_version}}/bin/java"
+    force=no
+  tags: unpack
+
+- name: "Crea el enlace simbólico"
+  become: yes
+  file:
+    src="{{oracle_jdk_installation_dir}}/jdk{{oracle_jdk_version}}"
+    dest="{{oracle_jdk_installation_dir}}/java"
+    state=link
+  tags: link
+
+- name: Descomprime Java JCE package
+  strategy: debug
+  unarchive:
+    src="{{oracle_jdk_download_dir}}/{{oracle_jce_package}}"
+    dest="/tmp/"
+    creates="/tmp/UnlimitedJCEPolicy/"
+  when: oracle_jce
+  tags:
+    - jce
+
+
+- name: Instala las politica JCE.
+  become: yes
+  when: oracle_jce
+  changed_when: false
+  with_items:
+    - local_policy.jar
+    - US_export_policy.jar
+  command: install
+      --owner root
+      --group root
+      --mode 0644
+      /tmp/UnlimitedJCEPolicy/{{ item }}
+      {{ oracle_jce_installation_dir }}/{{ item }}
+  tags:
+    - jce
+
+- name: "Establece JAVA_HOME a {{oracle_jdk_installation_dir}}/java "
+  lineinfile:
+    dest=~/.bashrc
+    line="export JAVA_HOME={{oracle_jdk_installation_dir}}/java"
+    state=present
+    insertafter=EOF
+    create=true
+
+- name: Añade JAVA_HOME a la variable de PATH
+  lineinfile:
+    dest=~/.bashrc
+    line="export PATH=$JAVA_HOME/bin:$PATH"
+    state=present
+    insertafter=EOF
+    create=true

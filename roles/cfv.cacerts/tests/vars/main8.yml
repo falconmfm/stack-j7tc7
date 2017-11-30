@@ -1,0 +1,12 @@
+---
+# defaults file for oracle_jdk
+oracle_jdk_oficial: true
+oracle_jdk_download_dir: 'files'
+oracle_jdk_package: 'jdk-8u151-linux-x64.tar.gz'
+oracle_jdk_package_subdir: '8u151-b12'
+oracle_jdk_version: '1.8.0_151'
+oracle_jdk_installation_dir: '/import/software'
+oracle_jce_installation_dir: '{{ oracle_jdk_installation_dir }}/java/jre/lib/security'
+oracle_jce: true
+oracle_jdk_download: false
+oracle_jce_package: 'UnlimitedJCEPolicyJDK8.tgz'

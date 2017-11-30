@@ -1,0 +1,8 @@
+---
+- hosts: all
+  vars_files:
+    - vars/main8.yml
+  roles:
+    - { role: cfv.java }
+    - { role: cfv.tomcat7 }
+

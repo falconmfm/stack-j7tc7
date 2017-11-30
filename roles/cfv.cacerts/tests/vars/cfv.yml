@@ -1,0 +1,7 @@
+---
+# default variables for CFV environmet
+proxy_env:
+  http_proxy: http://proxy.cfv.junta-andalucia.es:3128
+  https_proxy: http://proxy.cfv.junta-andalucia.es:3128
+  no_proxy: "cfv.junta-andalucia.es"
+
